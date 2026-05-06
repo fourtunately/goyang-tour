@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>고양시 맞춤 코스 추천 🗺️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --g1: #0D3B2E;
+      --g2: #1A6045;
+      --g3: #2E8B57;
+      --accent: #F4A435;
+      --accent2: #E8734A;
+      --bg: #F7F3ED;
+      --card: #FFFDF9;
+      --text: #1A1208;
+      --text-m: #4A3F2F;
+      --text-light: #8A7B68;
+      --border: #E0D8CC;
+      --r: 18px;
+      --shadow: 0 8px 32px rgba(13,59,46,0.12);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Nanum Gothic', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── 배경 패턴 ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(46,139,87,0.06) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(244,164,53,0.06) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* ── 헤더 ── */
+    header {
+      background: linear-gradient(160deg, var(--g1) 0%, var(--g2) 55%, var(--g3) 100%);
+      color: #fff;
+      padding: 48px 24px 72px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -2px; left: 0; right: 0;
+      height: 50px;
+      background: var(--bg);
+      clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .header-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 30px;
+      padding: 6px 16px;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+    .badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.3)} }
+
+    header h1 {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: clamp(2rem, 6vw, 3.4rem);
+      line-height: 1.15;
+      letter-spacing: -1px;
+      text-shadow: 3px 4px 0 rgba(0,0,0,0.2);
+      margin-bottom: 14px;
+    }
+    header h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    header .subtitle {
+      font-size: 0.95rem;
+      opacity: 0.85;
+      line-height: 1.7;
+    }
+    .step-bar {
+      display: flex; justify-content: center; gap: 0; margin-top: 28px;
+    }
+    .step-item {
+      display: flex; flex-direction: column; align-items: center;
+      position: relative;
+    }
+    .step-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 14px; left: calc(50% + 14px);
+      width: 40px; height: 2px;
+      background: rgba(255,255,255,0.3);
+    }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: 2px solid rgba(255,255,255,0.5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .step-num.active { background: var(--accent); border-color: var(--accent); }
+    .step-label { font-size: 0.7rem; opacity: 0.8; white-space: nowrap; }
+    .step-item { min-width: 70px; }
+
+    /* ── 메인 ── */
+    main {
+      max-width: 720px;
+      margin: -20px auto 60px;
+      padding: 0 16px;
+      position: relative; z-index: 1;
+    }
+
+    /* ── 스크린 시스템 ── */
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── 카드 공통 ── */
+    .card {
+      background: var(--card);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      padding: 32px 28px;
+      margin-bottom: 20px;
+    }
+    .card-tag {
+      display: inline-block;
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      color: var(--g2);
+      background: rgba(46,139,87,0.1);
+      border-radius: 20px;
+      padding: 4px 12px;
+      margin-bottom: 12px;
+    }
+    .card h2 {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 1.5rem;
+      color: var(--g1);
+      margin-bottom: 8px;
+    }
+    .card p.desc {
+      color: var(--text-m);
+      font-size: 0.92rem;
+      line-height: 1.8;
+    }
+
+    /* ── Q1: 동행 선택 ── */
+    .companion-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 24px;
+    }
+    .companion-btn {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      padding: 22px 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all .22s cubic-bezier(.34,1.56,.64,1);
+      position: relative;
+      overflow: hidden;
+    }
+    .companion-btn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--g3), var(--g2));
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .companion-btn:hover { transform: translateY(-4px); border-color: var(--g3); box-shadow: 0 8px 24px rgba(46,139,87,0.2); }
+    .companion-btn:hover::before { opacity: 0.06; }
+    .companion-btn.selected {
+      border-color: var(--g3);
+      background: linear-gradient(135deg, rgba(46,139,87,0.08), rgba(26,96,69,0.08));
+      box-shadow: 0 0 0 3px rgba(46,139,87,0.2), 0 8px 24px rgba(46,139,87,0.2);
+    }
+    .companion-icon { font-size: 2.4rem; margin-bottom: 10px; display: block; position: relative; z-index:1; }
+    .companion-label {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 1rem;
+      color: var(--g1);
+      position: relative; z-index:1;
+    }
+    .companion-sub {
+      font-size: 0.72rem;
+      color: var(--text-light);
+      margin-top: 4px;
+      position: relative; z-index:1;
+    }
+
+    /* ── Q2: 분위기 ── */
+    .mood-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+    .mood-btn {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      cursor: pointer;
+      text-align: left;
+      transition: all .2s;
+    }
+    .mood-btn:hover { border-color: var(--accent); background: rgba(244,164,53,0.05); transform: translateX(4px); }
+    .mood-btn.selected { border-color: var(--accent); background: rgba(244,164,53,0.08); box-shadow: 0 0 0 3px rgba(244,164,53,0.15); }
+    .mood-icon { font-size: 1.8rem; flex-shrink: 0; }
+    .mood-text h4 { font-family: 'Black Han Sans', sans-serif; font-size: 1rem; color: var(--text); margin-bottom: 2px; }
+    .mood-text p { font-size: 0.8rem; color: var(--text-light); line-height: 1.5; }
+
+    /* ── 버튼 ── */
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--g2), var(--g1));
+      color: #fff;
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      border: none;
+      padding: 18px;
+      border-radius: 14px;
+      cursor: pointer;
+      margin-top: 20px;
+      box-shadow: 0 6px 20px rgba(13,59,46,0.3);
+      transition: all .2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(13,59,46,0.4); }
+    .btn-primary:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: transparent;
+      border: 2px solid var(--border);
+      color: var(--text-m);
+      font-family: 'Nanum Gothic', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-secondary:hover { border-color: var(--g3); color: var(--g2); }
+
+    /* ── 결과 화면 ── */
+    .result-header {
+      background: linear-gradient(135deg, var(--g1), var(--g2));
+      color: #fff;
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .result-header::after {
+      content: '';
+      position: absolute;
+      right: -20px; top: -20px;
+      width: 140px; height: 140px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+    }
+    .result-type {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+    .result-name {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 2rem;
+      margin-bottom: 6px;
+    }
+    .result-name span { color: var(--accent); }
+    .result-sub { font-size: 0.88rem; opacity: .85; line-height: 1.7; }
+
+    /* ── 코스 타임라인 ── */
+    .timeline { position: relative; margin-top: 4px; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 20px; top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--g3), var(--accent));
+    }
+    .tl-item {
+      display: flex; gap: 18px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .tl-dot {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--g2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      position: relative; z-index: 1;
+      box-shadow: 0 4px 12px rgba(13,59,46,0.3);
+    }
+    .tl-content {
+      flex: 1;
+      background: var(--bg);
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      margin-top: 4px;
+    }
+    .tl-content h4 {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 1rem;
+      color: var(--g1);
+      margin-bottom: 4px;
+    }
+    .tl-content p { font-size: 0.82rem; color: var(--text-m); line-height: 1.7; }
+    .tl-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      background: rgba(46,139,87,0.12);
+      color: var(--g2);
+      border-radius: 20px;
+      padding: 2px 10px;
+      margin-top: 6px;
+      font-weight: 700;
+    }
+
+    /* ── 팁 박스 ── */
+    .tip-box {
+      background: linear-gradient(135deg, rgba(244,164,53,0.1), rgba(232,115,74,0.08));
+      border: 1.5px solid rgba(244,164,53,0.3);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-top: 16px;
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .tip-box .tip-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+    .tip-box p { font-size: 0.85rem; color: var(--text-m); line-height: 1.7; }
+    .tip-box strong { color: var(--accent2); }
+
+    /* ── QR 박스 ── */
+    .qr-box {
+      background: var(--g1);
+      color: #fff;
+      border-radius: 20px;
+      padding: 24px;
+      margin-top: 20px;
+      display: flex; gap: 20px; align-items: center;
+    }
+    .qr-visual {
+      width: 80px; height: 80px;
+      background: #fff;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.4rem;
+      flex-shrink: 0;
+    }
+    .qr-text h4 { font-family: 'Black Han Sans', sans-serif; font-size: 1rem; margin-bottom: 6px; }
+    .qr-text p { font-size: 0.8rem; opacity: .8; line-height: 1.6; }
+    .qr-url {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      background: rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-family: monospace;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── 반응 체크 ── */
+    .reaction-section { margin-top: 28px; }
+    .reaction-section h3 {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 1.1rem;
+      color: var(--g1);
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .reaction-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .react-btn {
+      flex: 1; min-width: 120px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      cursor: pointer;
+      text-align: center;
+      transition: all .2s;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .react-btn:hover { border-color: var(--g3); background: rgba(46,139,87,0.06); transform: scale(1.03); }
+    .react-btn.voted { border-color: var(--g3); background: rgba(46,139,87,0.1); }
+    .react-btn .r-emoji { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+    .react-btn .r-label { color: var(--text-m); }
+
+    /* ── 결과 집계 바 ── */
+    .vote-result { display: none; margin-top: 16px; }
+    .vote-result.show { display: block; animation: fadeIn .3s ease; }
+    .vote-bar-item { margin-bottom: 12px; }
+    .vote-bar-label { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-m); margin-bottom: 4px; font-weight: 700; }
+    .vote-bar-track { height: 10px; background: var(--border); border-radius: 10px; overflow: hidden; }
+    .vote-bar-fill { height: 100%; background: linear-gradient(90deg, var(--g3), var(--g2)); border-radius: 10px; transition: width 1s cubic-bezier(.34,1.56,.64,1); width: 0; }
+
+    /* ── 진행 흐름 배너 ── */
+    .flow-banner {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px 24px;
+      margin-top: 32px;
+      display: flex; gap: 0; overflow: hidden;
+    }
+    .flow-step {
+      flex: 1; text-align: center; padding: 0 8px;
+      position: relative;
+    }
+    .flow-step:not(:last-child)::after {
+      content: '→';
+      position: absolute;
+      right: -8px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-light);
+      font-size: 0.9rem;
+    }
+    .flow-step .f-icon { font-size: 1.6rem; margin-bottom: 4px; }
+    .flow-step .f-week { font-size: 0.65rem; color: var(--text-light); letter-spacing: 1px; font-weight: 700; }
+    .flow-step .f-name { font-size: 0.8rem; font-weight: 800; color: var(--text-m); margin-top: 2px; }
+    .flow-step.now .f-name { color: var(--g2); }
+    .flow-step.now .f-icon { filter: none; }
+    .flow-step:not(.now) { opacity: 0.5; }
+
+    /* ── 푸터 ── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-light);
+      font-size: 0.78rem;
+      border-top: 1px solid var(--border);
+      position: relative; z-index: 1;
+    }
+    footer strong { color: var(--g2); }
+
+    @media(max-width: 500px) {
+      .companion-grid { grid-template-columns: repeat(3,1fr); gap: 10px; }
+      .companion-btn { padding: 16px 8px; }
+      .companion-icon { font-size: 1.8rem; }
+      .qr-box { flex-direction: column; text-align: center; }
+      .flow-step .f-name { font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<header>
+  <div class="header-badge">
+    <span class="badge-dot"></span>
+    중부대학교 서비스러닝 4팀 · 3주차
+  </div>
+  <h1>나에게 딱 맞는<br/><em>고양시 코스</em> 찾기</h1>
+  <p class="subtitle">간단한 질문 2가지로<br/>당신만을 위한 관광 코스를 추천해 드려요</p>
+  <div class="step-bar">
+    <div class="step-item">
+      <div class="step-num active" id="sn1">1</div>
+      <div class="step-label">동행 선택</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num" id="sn2">2</div>
+      <div class="step-label">분위기 선택</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num" id="sn3">✓</div>
+      <div class="step-label">코스 추천</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── 진행 흐름 ── -->
+  <div class="flow-banner">
+    <div class="flow-step">
+      <div class="f-icon">📋</div>
+      <div class="f-week">1주차</div>
+      <div class="f-name">설문조사</div>
+    </div>
+    <div class="flow-step">
+      <div class="f-icon">🎡</div>
+      <div class="f-week">2주차</div>
+      <div class="f-name">룰렛 홍보</div>
+    </div>
+    <div class="flow-step now">
+      <div class="f-icon">🗺️</div>
+      <div class="f-week">3주차</div>
+      <div class="f-name">맞춤 코스 매칭</div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 1: 동행 선택 ── -->
+  <div class="screen active" id="screen1">
+    <div class="card" style="margin-top:20px">
+      <span class="card-tag">STEP 01</span>
+      <h2>누구랑 고양시 가고 싶어요? 🤔</h2>
+      <p class="desc">동행 유형을 선택하면 딱 맞는 코스를 추천해 드려요!</p>
+      <div class="companion-grid">
+        <button class="companion-btn" onclick="selectCompanion('alone', this)">
+          <span class="companion-icon">🧘</span>
+          <div class="companion-label">혼자</div>
+          <div class="companion-sub">나만의 시간</div>
+        </button>
+        <button class="companion-btn" onclick="selectCompanion('friends', this)">
+          <span class="companion-icon">👫</span>
+          <div class="companion-label">친구랑</div>
+          <div class="companion-sub">신나게 즐기기</div>
+        </button>
+        <button class="companion-btn" onclick="selectCompanion('couple', this)">
+          <span class="companion-icon">💑</span>
+          <div class="companion-label">연인이랑</div>
+          <div class="companion-sub">설레는 데이트</div>
+        </button>
+      </div>
+      <button class="btn-primary" id="btn1" disabled onclick="goScreen2()">
+        다음 단계로 →
+      </button>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 2: 분위기 선택 ── -->
+  <div class="screen" id="screen2">
+    <div class="card" style="margin-top:20px">
+      <span class="card-tag">STEP 02</span>
+      <h2>오늘 어떤 느낌으로 갈까요? ✨</h2>
+      <p class="desc">원하는 분위기를 골라보세요.</p>
+      <div class="mood-list" id="moodList"></div>
+      <button class="btn-primary" id="btn2" disabled onclick="goResult()">
+        내 코스 보러가기 🗺️
+      </button>
+      <br/>
+      <button class="btn-secondary" style="width:100%;margin-top:10px" onclick="goScreen1()">← 처음으로 돌아가기</button>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 3: 결과 ── -->
+  <div class="screen" id="screen3">
+    <div class="result-header" id="resultHeader" style="margin-top:20px">
+      <div class="result-type" id="resultType"></div>
+      <div class="result-name" id="resultName"></div>
+      <div class="result-sub" id="resultSub"></div>
+    </div>
+
+    <div class="card">
+      <span class="card-tag">추천 코스</span>
+      <h2>오늘의 동선 🗺️</h2>
+      <div class="timeline" id="timeline"></div>
+      <div class="tip-box" id="tipBox"></div>
+    </div>
+
+    <div class="qr-box">
+      <div class="qr-visual">📱</div>
+      <div class="qr-text">
+        <h4>상세 정보 바로 보기</h4>
+        <p>각 관광지의 운영시간, 입장료, 교통편을<br/>QR로 바로 확인하세요!</p>
+        <div class="qr-url">goyang.go.kr/tour</div>
+      </div>
+    </div>
+
+    <!-- 반응 체크 -->
+    <div class="reaction-section">
+      <h3>📊 이 코스, 실제로 가고 싶으신가요?</h3>
+      <div class="reaction-btns">
+        <button class="react-btn" onclick="vote('yes', this)">
+          <span class="r-emoji">😍</span>
+          <span class="r-label">꼭 가고 싶다!</span>
+        </button>
+        <button class="react-btn" onclick="vote('maybe', this)">
+          <span class="r-emoji">🤔</span>
+          <span class="r-label">한번 고려해볼게요</span>
+        </button>
+        <button class="react-btn" onclick="vote('no', this)">
+          <span class="r-emoji">😅</span>
+          <span class="r-label">아직은 모르겠어요</span>
+        </button>
+      </div>
+      <div class="vote-result" id="voteResult">
+        <div style="margin:14px 0 10px; font-size:.85rem; color:var(--text-light); font-weight:700;">참여자 반응 집계 (현장 누적)</div>
+        <div class="vote-bar-item">
+          <div class="vote-bar-label"><span>😍 꼭 가고 싶다!</span><span id="pct-yes">0%</span></div>
+          <div class="vote-bar-track"><div class="vote-bar-fill" id="bar-yes"></div></div>
+        </div>
+        <div class="vote-bar-item">
+          <div class="vote-bar-label"><span>🤔 고려해볼게요</span><span id="pct-maybe">0%</span></div>
+          <div class="vote-bar-track"><div class="vote-bar-fill" id="bar-maybe"></div></div>
+        </div>
+        <div class="vote-bar-item">
+          <div class="vote-bar-label"><span>😅 모르겠어요</span><span id="pct-no">0%</span></div>
+          <div class="vote-bar-track"><div class="vote-bar-fill" id="bar-no"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-secondary" style="width:100%;margin-top:24px" onclick="restart()">🔄 다른 코스 추천받기</button>
+  </div>
+
+</main>
+
+<footer>
+  <p><strong>중부대학교 서비스러닝 4팀</strong> | 고양시 지역사회 관광 활성화 프로젝트<br/>
+  📍 중앙도서관 앞 · 학생회관 · 통학로 현장 운영 중</p>
+</footer>
+
+<script>
+/* ─── 데이터 ─── */
+const MOODS = {
+  alone: [
+    { id:'healing', icon:'🌿', label:'힐링·자연', desc:'조용히 걷고 쉬고 싶어요' },
+    { id:'culture', icon:'🏯', label:'역사·문화', desc:'의미 있는 곳을 둘러보고 싶어요' },
+    { id:'food',    icon:'🍜', label:'맛집 탐방', desc:'혼자 맛있는 걸 먹고 싶어요' },
+  ],
+  friends: [
+    { id:'activity', icon:'🎢', label:'액티비티', desc:'신나게 놀고 싶어요!' },
+    { id:'shopping', icon:'🛍️', label:'쇼핑·카페', desc:'구경하고 카페도 들르고 싶어요' },
+    { id:'photo',    icon:'📸', label:'인생샷 투어', desc:'예쁜 사진 많이 찍고 싶어요' },
+  ],
+  couple: [
+    { id:'romantic', icon:'🌸', label:'로맨틱 데이트', desc:'설레는 분위기를 원해요' },
+    { id:'active',   icon:'⚡', label:'신나는 데이트', desc:'함께 활동적으로 즐기고 싶어요' },
+    { id:'cultural', icon:'🎭', label:'문화·공연', desc:'공연이나 전시를 함께 보고 싶어요' },
+  ],
+};
+
+const COURSES = {
+  alone_healing: {
+    type: '혼자 · 힐링 코스',
+    name: '<span>호수공원</span> 힐링 산책',
+    sub: '일산 호수공원의 고요한 수면을 바라보며 나만의 시간을 충전해요. 이른 아침이나 저녁 노을 시간대를 추천드려요.',
+    steps: [
+      { icon:'🌊', name:'일산 호수공원', desc:'달빛광장 → 수변 데크 산책로 → 철새 관찰 포인트', tag:'도보 60~90분' },
+      { icon:'☕', name:'호수변 카페', desc:'수면이 보이는 창가 자리에서 따뜻한 음료 한 잔', tag:'여유롭게 휴식' },
+      { icon:'🌅', name:'노을 감상 포인트', desc:'해질 녘 호수 반영이 장관 — 인생샷 타임!', tag:'포토존' },
+    ],
+    tip: '🚇 <strong>교통:</strong> 지하철 3호선 정발산역 도보 5분 | 🎫 <strong>입장:</strong> 무료'
+  },
+  alone_culture: {
+    type: '혼자 · 역사 코스',
+    name: '<span>서오릉</span> 역사 탐방',
+    sub: '유네스코 세계문화유산인 서오릉을 천천히 걸으며 조선 왕실의 역사를 느껴보세요.',
+    steps: [
+      { icon:'🏯', name:'서오릉', desc:'다섯 개의 능을 순서대로 탐방, 오디오 가이드 활용', tag:'약 2시간' },
+      { icon:'🌲', name:'소나무 숲길', desc:'수백 년 된 소나무 숲길을 걸으며 힐링', tag:'산책 추천' },
+      { icon:'🍱', name:'원당 전통시장', desc:'탐방 후 전통시장에서 소박한 한 끼', tag:'맛집' },
+    ],
+    tip: '🚌 <strong>교통:</strong> 버스 9710, 88번 | 🎫 <strong>입장료:</strong> 성인 1,000원'
+  },
+  alone_food: {
+    type: '혼자 · 맛집 코스',
+    name: '<span>일산 밤리단길</span> 혼밥 투어',
+    sub: '혼자 먹어도 눈치 없는 일산 밤리단길의 개성 있는 가게들을 투어해 보세요.',
+    steps: [
+      { icon:'🍜', name:'일산 밤리단길', desc:'감성 식당부터 이색 카페까지 즐비한 거리', tag:'도보 탐방' },
+      { icon:'🧁', name:'베이커리 카페', desc:'혼자 조용히 책 읽기 좋은 분위기의 카페', tag:'여유시간' },
+      { icon:'🏬', name:'라페스타', desc:'가볍게 구경 후 영화 한 편', tag:'마무리' },
+    ],
+    tip: '🚇 <strong>교통:</strong> 지하철 3호선 백석역 도보 10분 | 💰 1인 식사 1만~2만원대'
+  },
+  friends_activity: {
+    type: '친구들 · 액티비티 코스',
+    name: '<span>원마운트</span> 신나는 하루',
+    sub: '친구들과 원마운트에서 온몸으로 즐기고, 스타필드에서 쇼핑까지! 하루가 부족한 코스예요.',
+    steps: [
+      { icon:'🎢', name:'원마운트 워터파크/스케이트장', desc:'계절에 따라 워터파크 or 아이스링크 선택', tag:'반나절' },
+      { icon:'🍔', name:'점심 & 간식', desc:'스타필드 푸드코트에서 든든하게', tag:'맛집' },
+      { icon:'🛍️', name:'스타필드 고양', desc:'국내 최대급 복합몰에서 신나게 쇼핑', tag:'오후 코스' },
+    ],
+    tip: '🚇 <strong>교통:</strong> 수도권 전철 킨텍스역 도보 10분 | 🎫 입장권 사전 예매 추천'
+  },
+  friends_shopping: {
+    type: '친구들 · 쇼핑 코스',
+    name: '<span>스타필드</span> 쇼핑 풀코스',
+    sub: '친구들과 스타필드 고양에서 쇼핑하고, 주변 카페 거리에서 인생 카페도 발굴해 보세요.',
+    steps: [
+      { icon:'🛍️', name:'스타필드 고양', desc:'쇼핑 + 아쿠아필드 스파 + 아이쇼핑', tag:'오전~점심' },
+      { icon:'☕', name:'킨텍스 광장 카페 거리', desc:'개성 넘치는 카페들이 즐비한 거리', tag:'카페 투어' },
+      { icon:'🎡', name:'킨텍스 전시', desc:'진행 중인 박람회 or 전시 관람', tag:'마무리' },
+    ],
+    tip: '🚇 <strong>교통:</strong> 수도권 전철 킨텍스역 바로 앞 | 💡 주말은 혼잡 — 오전 방문 추천'
+  },
+  friends_photo: {
+    type: '친구들 · 인생샷 코스',
+    name: '<span>꽃박람회</span> 감성 사진 투어',
+    sub: '고양 국제 꽃박람회와 호수공원에서 SNS에 바로 올릴 수 있는 인생샷을 남겨보세요!',
+    steps: [
+      { icon:'🌸', name:'고양 국제 꽃박람회', desc:'테마 정원, 대형 꽃 조형물 포토존 — 봄 시즌 필수!', tag:'포토존 맛집' },
+      { icon:'🌊', name:'일산 호수공원', desc:'달빛광장 분수 & 노을 수면 반영 촬영', tag:'감성 사진' },
+      { icon:'🍦', name:'호수변 감성 카페', desc:'카페 내부 소품 활용 인스타 감성 컷', tag:'카페 포토' },
+    ],
+    tip: '📸 <strong>골든타임:</strong> 오전 8~10시 또는 오후 5~7시 | 🌸 봄 시즌(4~5월) 추천'
+  },
+  couple_romantic: {
+    type: '연인 · 로맨틱 코스',
+    name: '<span>꽃박람회</span> 설레는 데이트',
+    sub: '꽃향기 가득한 박람회부터 호수 노을까지, 영화 속 한 장면 같은 하루를 만들어 드려요.',
+    steps: [
+      { icon:'🌸', name:'고양 국제 꽃박람회', desc:'수만 송이 꽃 사이를 함께 걸으며 사진 한 컷', tag:'로맨틱 포토' },
+      { icon:'🌊', name:'일산 호수공원 노을 산책', desc:'손 잡고 호수변을 걸으며 노을 감상', tag:'저녁 추천' },
+      { icon:'🕯️', name:'분위기 있는 레스토랑', desc:'웨스턴돔 or 라페스타 근처 감성 다이닝', tag:'저녁 식사' },
+    ],
+    tip: '💡 <strong>꿀팁:</strong> 꽃박람회는 봄(4~5월)이 절정! 평일 방문 시 한산하고 여유로워요'
+  },
+  couple_active: {
+    type: '연인 · 액티브 데이트',
+    name: '<span>원마운트</span> + <span>행주산성</span> 코스',
+    sub: '오전엔 신나게 놀고, 오후엔 한강 뷰 행주산성에서 역사 산책 — 알찬 커플 하루!',
+    steps: [
+      { icon:'⛸️', name:'원마운트 아이스링크', desc:'둘이서 손잡고 스케이트 타기', tag:'오전' },
+      { icon:'🍱', name:'점심', desc:'스타필드 or 킨텍스 주변 맛집에서 든든하게', tag:'점심' },
+      { icon:'⚔️', name:'행주산성', desc:'한강 조망 전망대에서 함께 바라보는 강 뷰', tag:'오후 산책' },
+    ],
+    tip: '⚡ <strong>에너지 넘치는 코스!</strong> 편한 운동화 필수 | 행주산성 입장 무료'
+  },
+  couple_cultural: {
+    type: '연인 · 문화 데이트',
+    name: '<span>아람누리</span> 공연 관람',
+    sub: '고양아람누리에서 공연을 함께 보고, 호수공원 야경으로 마무리하는 품격 있는 데이트.',
+    steps: [
+      { icon:'🎭', name:'고양 아람누리', desc:'뮤지컬·클래식·전시 등 원하는 공연 선택', tag:'공연 관람' },
+      { icon:'🍽️', name:'대화역 근처 레스토랑', desc:'공연 전 또는 후 근사한 식사', tag:'식사' },
+      { icon:'🌙', name:'호수공원 야경', desc:'밤의 호수공원 — 조명이 아름다운 야경 산책', tag:'마무리' },
+    ],
+    tip: '🎫 <strong>예매 필수!</strong> 아람누리 홈페이지에서 사전 예매 시 10~30% 할인 가능'
+  },
+};
+
+/* ─── 상태 ─── */
+let companion = null;
+let mood = null;
+let votes = { yes: 12, maybe: 7, no: 3 }; // 누적 초기값 (현장 데이터 시뮬)
+
+/* ─── 동행 선택 ─── */
+function selectCompanion(type, el) {
+  companion = type;
+  document.querySelectorAll('.companion-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('btn1').disabled = false;
+  renderMoods();
+}
+
+function renderMoods() {
+  const list = document.getElementById('moodList');
+  list.innerHTML = '';
+  (MOODS[companion] || []).forEach(m => {
+    list.innerHTML += `
+      <button class="mood-btn" onclick="selectMood('${m.id}', this)">
+        <span class="mood-icon">${m.icon}</span>
+        <div class="mood-text">
+          <h4>${m.label}</h4>
+          <p>${m.desc}</p>
+        </div>
+      </button>`;
+  });
+  mood = null;
+  document.getElementById('btn2').disabled = true;
+}
+
+function selectMood(id, el) {
+  mood = id;
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('btn2').disabled = false;
+}
+
+/* ─── 화면 전환 ─── */
+function goScreen1() {
+  setScreen('screen1');
+  document.getElementById('sn1').classList.add('active');
+  document.getElementById('sn2').classList.remove('active');
+  document.getElementById('sn3').classList.remove('active');
+}
+function goScreen2() {
+  if (!companion) return;
+  setScreen('screen2');
+  document.getElementById('sn2').classList.add('active');
+  document.getElementById('sn3').classList.remove('active');
+}
+function goResult() {
+  if (!companion || !mood) return;
+  const key = companion + '_' + mood;
+  const course = COURSES[key];
+  if (!course) return;
+
+  document.getElementById('resultType').textContent = course.type;
+  document.getElementById('resultName').innerHTML = course.name;
+  document.getElementById('resultSub').textContent = course.sub;
+
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = course.steps.map(s => `
+    <div class="tl-item">
+      <div class="tl-dot">${s.icon}</div>
+      <div class="tl-content">
+        <h4>${s.name}</h4>
+        <p>${s.desc}</p>
+        <span class="tl-tag">${s.tag}</span>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('tipBox').innerHTML = `
+    <span class="tip-icon">💡</span>
+    <p>${course.tip}</p>`;
+
+  document.getElementById('voteResult').classList.remove('show');
+  document.querySelectorAll('.react-btn').forEach(b => b.classList.remove('voted'));
+
+  setScreen('screen3');
+  document.getElementById('sn3').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function setScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ─── 반응 투표 ─── */
+function vote(type, el) {
+  if (el.classList.contains('voted')) return;
+  document.querySelectorAll('.react-btn').forEach(b => b.classList.remove('voted'));
+  el.classList.add('voted');
+  votes[type]++;
+  const total = votes.yes + votes.maybe + votes.no;
+  const pcts = {
+    yes:   Math.round(votes.yes   / total * 100),
+    maybe: Math.round(votes.maybe / total * 100),
+    no:    Math.round(votes.no    / total * 100),
+  };
+  document.getElementById('pct-yes').textContent   = pcts.yes   + '%';
+  document.getElementById('pct-maybe').textContent = pcts.maybe + '%';
+  document.getElementById('pct-no').textContent    = pcts.no    + '%';
+  document.getElementById('voteResult').classList.add('show');
+  setTimeout(() => {
+    document.getElementById('bar-yes').style.width   = pcts.yes   + '%';
+    document.getElementById('bar-maybe').style.width = pcts.maybe + '%';
+    document.getElementById('bar-no').style.width    = pcts.no    + '%';
+  }, 100);
+}
+
+function restart() {
+  companion = null; mood = null;
+  document.querySelectorAll('.companion-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('btn1').disabled = true;
+  document.getElementById('sn1').classList.add('active');
+  document.getElementById('sn2').classList.remove('active');
+  document.getElementById('sn3').classList.remove('active');
+  goScreen1();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
